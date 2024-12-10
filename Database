@@ -1,0 +1,150 @@
+USE SFISDB;
+CREATE TABLE Admins (
+    AdminID INT PRIMARY KEY IDENTITY(1,1),
+    Username NVARCHAR(50) NOT NULL,
+    Password NVARCHAR(255) NOT NULL,
+    FullName NVARCHAR(100) NOT NULL,
+    Email NVARCHAR(100) NOT NULL,
+    CreatedAt DATETIME DEFAULT GETDATE()
+);
+
+INSERT INTO Admins (Username, Password, FullName, Email) 
+VALUES ('admin',  'admin@123', 'Admin User', 'admin@gmail.com');
+
+SELECT * FROM Admins;
+CREATE TABLE Faculty (
+    FacultyID INT PRIMARY KEY IDENTITY(1,1),
+    FirstName NVARCHAR(100) NOT NULL,
+    LastName NVARCHAR(100) NOT NULL,
+    Email NVARCHAR(100) NOT NULL UNIQUE,
+    Password NVARCHAR(255) NOT NULL,
+    PhoneNumber NVARCHAR(15) NOT NULL,
+    Department NVARCHAR(100) NOT NULL,
+    JoiningDate DATE NOT NULL,
+    IsActive BIT DEFAULT 1,
+    CreatedAt DATETIME DEFAULT GETDATE(),
+    UpdatedAt DATETIME DEFAULT GETDATE()
+);
+
+select * from Faculty;
+
+INSERT INTO Faculty (FirstName, LastName, Email, Password, PhoneNumber, Department, JoiningDate)
+VALUES 
+('John', 'Doe', 'john.doe@university.com', 'password123', '9876543210', 'Computer Science', '2020-05-10'),
+('Jane', 'Smith', 'jane.smith@university.com', 'password456', '9876543220', 'Mathematics', '2021-08-15'),
+('Alice', 'Johnson', 'alice.johnson@university.com', 'password789', '9876543230', 'Physics', '2022-01-20');
+
+
+CREATE TABLE Students (
+    StudentID INT PRIMARY KEY IDENTITY(1,1),
+    FirstName NVARCHAR(100) NOT NULL,
+    LastName NVARCHAR(100) NOT NULL,
+    Email NVARCHAR(100) NOT NULL UNIQUE,
+    Password NVARCHAR(255) NOT NULL,
+    PhoneNumber NVARCHAR(15) NOT NULL,
+    Department NVARCHAR(100) NOT NULL,
+    EnrollmentDate DATE NOT NULL,
+    IsActive BIT DEFAULT 1,
+    CreatedAt DATETIME DEFAULT GETDATE(),
+    UpdatedAt DATETIME DEFAULT GETDATE()
+);
+
+
+CREATE TABLE Courses (
+    CourseID INT PRIMARY KEY IDENTITY(1,1),
+    CourseName NVARCHAR(100) NOT NULL,
+    Department NVARCHAR(100) NOT NULL,
+    FacultyID INT NOT NULL FOREIGN KEY REFERENCES Faculty(FacultyID),
+    CreatedAt DATETIME DEFAULT GETDATE(),
+    UpdatedAt DATETIME DEFAULT GETDATE()
+);
+
+-- Insert data into Courses table
+INSERT INTO Courses (CourseName, Department, FacultyID) VALUES 
+('Computer Networks', 'Computer Science', 1),  -- Course taught by Faculty with ID 1
+('Data Structures', 'Computer Science', 2),   -- Course taught by Faculty with ID 2
+('Artificial Intelligence', 'Computer Science', 3); -- Course taught by Faculty with ID 3
+
+
+select * from Courses;
+select *from Students;
+
+CREATE TABLE StudentCourses (
+    EnrollmentID INT PRIMARY KEY IDENTITY(1,1),
+    StudentID INT NOT NULL FOREIGN KEY REFERENCES Students(StudentID),
+    CourseID INT NOT NULL FOREIGN KEY REFERENCES Courses(CourseID),
+    EnrollmentDate DATE DEFAULT GETDATE()
+);
+
+-- Insert data into StudentCourses table
+INSERT INTO StudentCourses (StudentID, CourseID) VALUES 
+(1, 1),  -- Enroll Student with ID 1 into Course with ID 1
+(2, 2),  -- Enroll Student with ID 2 into Course with ID 2
+(3, 3);  -- Enroll Student with ID 3 into Course with ID 3
+
+select * from StudentCourses;
+
+ALTER TABLE StudentCourses
+ADD CONSTRAINT FK_StudentCourses_Students
+FOREIGN KEY (StudentID) REFERENCES Students(StudentID)
+ON DELETE CASCADE;
+
+
+CREATE TABLE CourseMaterials (
+    MaterialID INT PRIMARY KEY IDENTITY(1,1),
+    CourseID INT NOT NULL FOREIGN KEY REFERENCES Courses(CourseID),
+    FileName NVARCHAR(255) NOT NULL,
+    FilePath NVARCHAR(255) NOT NULL,
+    FileType NVARCHAR(50) NOT NULL, -- 'Syllabus' or 'Notes'
+    UploadedBy INT NOT NULL FOREIGN KEY REFERENCES Faculty(FacultyID),
+    UploadedAt DATETIME DEFAULT GETDATE()
+);
+
+SELECT 
+    SC.EnrollmentID,
+    S.FirstName,
+    S.LastName,
+    C.CourseName,
+    SC.EnrollmentDate
+FROM 
+    StudentCourses SC
+JOIN 
+    Students S ON SC.StudentID = S.StudentID
+JOIN 
+    Courses C ON SC.CourseID = C.CourseID
+WHERE 
+    C.CourseName = 'C++';
+INSERT INTO StudentCourses (StudentID, CourseID, EnrollmentDate)
+VALUES (6, 4, GETDATE()); -- Enroll Sarah Taylor into the C++ course
+
+SELECT 
+    SC.EnrollmentID,
+    S.FirstName,
+    S.LastName,
+    C.CourseName,
+    SC.EnrollmentDate
+FROM 
+    StudentCourses SC
+JOIN 
+    Students S ON SC.StudentID = S.StudentID
+JOIN 
+    Courses C ON SC.CourseID = C.CourseID
+WHERE 
+    C.CourseName = 'C++';
+
+	INSERT INTO StudentCourses (EnrollmentID, StudentID, CourseID, EnrollmentDate)
+VALUES (5, 6, 4, GETDATE()); -- Assign a new EnrollmentID manually
+
+SELECT * FROM StudentCourses;
+
+
+
+CREATE TABLE Questions (
+    QuestionID INT PRIMARY KEY IDENTITY(1,1),
+    CourseID INT NOT NULL FOREIGN KEY REFERENCES Courses(CourseID),
+    QuestionText NVARCHAR(MAX) NOT NULL,
+    CreatedAt DATETIME DEFAULT GETDATE()
+);
+
+-- Verify that the table was created
+SELECT * FROM Questions;
